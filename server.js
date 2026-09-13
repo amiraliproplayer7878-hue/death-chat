@@ -151,6 +151,8 @@ socket.on('delete message', async (messageId) => {
     });
 
 
-server.listen(3000, () => {
-    console.log('🚀 Server is running on http://localhost:3000/login');
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 Server is running on port ${PORT}\nhttp://localhost:3000/login`);
 });
