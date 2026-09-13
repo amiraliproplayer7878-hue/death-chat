@@ -1,0 +1,85 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: radial-gradient(circle at 50% 20%, #1a0000 0%, #050505 60%);
+    color: #ccc;
+    font-family: 'Courier New', Courier, monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ===== افکت دود/مه متحرک ===== */
+.fog {
+    position: fixed;
+    inset: 0;
+    background: url('/fog.png') repeat-x;
+    opacity: 0.08;
+    animation: fogMove 40s linear infinite;
+    pointer-events: none;
+}
+@keyframes fogMove {
+    from { background-position: 0 0; }
+    to   { background-position: 2000px 0; }
+}
+
+/* ===== جعبه لاگین با پالس قرمز ===== */
+.login-box, .panel {
+    max-width: 400px;
+    margin: 15vh auto;
+    padding: 40px;
+    background: rgba(10, 10, 10, 0.9);
+    border: 1px solid #550000;
+    box-shadow: 0 0 25px rgba(255, 0, 0, 0.15);
+    animation: pulse 3s ease-in-out infinite;
+}
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 15px rgba(255,0,0,0.1); border-color: #550000; }
+    50%      { box-shadow: 0 0 35px rgba(255,0,0,0.35); border-color: #8b0000; }
+}
+
+/* ===== تیتر با گلو ===== */
+h1 {
+    color: #cc0000;
+    text-align: center;
+    letter-spacing: 4px;
+    text-shadow: 0 0 10px #ff0000, 0 0 30px #550000;
+    margin-bottom: 25px;
+    animation: flicker 4s infinite;
+}
+@keyframes flicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+    20%, 24%, 55% { opacity: 0.4; }
+}
+
+input, button {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    background: #000;
+    border: 1px solid #330000;
+    color: #eee;
+    font-family: inherit;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+input:focus {
+    outline: none;
+    border-color: #cc0000;
+    box-shadow: 0 0 12px rgba(255, 0, 0, 0.4);
+}
+button {
+    background: linear-gradient(180deg, #440000, #220000);
+    cursor: pointer;
+    letter-spacing: 2px;
+}
+button:hover {
+    background: linear-gradient(180deg, #660000, #330000);
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+}
+
+.error {
+    color: #ff3333;
+    text-align: center;
+    margin-top: 10px;
+    font-size: 14px;
+}

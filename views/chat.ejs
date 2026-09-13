@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💀 Death Secure Messenger</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #070707;
+            --surface: #111;
+            --surface-2: #161616;
+            --border: #2a2a2a;
+            --red: #ff4757;
+            --red-glow: rgba(255, 71, 87, 0.35);
+            --aqua: #00ffcc;
+            --aqua-glow: rgba(0, 255, 204, 0.25);
+            --text: #e0e0e0;
+            --muted: #888;
+            --radius: 10px;
+            --shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, 'Vazirmatn', sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #stars-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: fall linear infinite;
+            filter: drop-shadow(0 0 4px var(--red));
+        }
+        @keyframes fall {
+            0%   { transform: translateY(-10vh); opacity: 0; }
+            15%  { opacity: 0.8; }
+            100% { transform: translateY(110vh); opacity: 0; }
+        }
+
+        .content-layer {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 24px;
+            background: rgba(15, 15, 15, 0.92);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+        }
+        .topbar .title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--red);
+            text-shadow: 0 0 14px var(--red-glow);
+            letter-spacing: 1px;
+        }
+        .topbar .user-inline {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-badge {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 13px;
+            color: var(--aqua);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .user-badge .role-tag {
+            background: var(--red);
+            color: #fff;
+            font-size: 10px;
+            padding: 1px 7px;
+            border-radius: 10px;
+        }
+        .logout-btn {
+            color: var(--red);
+            text-decoration: none;
+            border: 1px solid var(--red);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            transition: all 0.25s;
+            background: transparent;
+            cursor: pointer;
+        }
+        .logout-btn:hover {
+            background: var(--red);
+            color: #fff;
+            box-shadow: 0 0 15px var(--red);
+        }
+
+        .chat-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        #chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            scroll-behavior: smooth;
+        }
+        #chat-box::-webkit-scrollbar { width: 6px; }
+        #chat-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        .message {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 11px 15px;
+            border-radius: var(--radius);
+            max-width: 62%;
+            width: fit-content;
+            box-shadow: var(--shadow);
+            animation: pop-in 0.3s ease;
+            position: relative;
+            user-select: none;
+        }
+        @keyframes pop-in {
+            from { opacity: 0; transform: translateY(8px) scale(0.97); }
+            to   { opacity: 1; transform: none; }
+        }
+        .message.my-message {
+            align-self: flex-end;
+            background: var(--red);
+            color: #fff;
+            border-color: var(--red);
+            box-shadow: 0 0 18px var(--red-glow);
+        }
+        .message.my-message .reply-quote {
+            border-right-color: #ffffff88;
+            background: rgba(0,0,0,0.28);
+        }
+        .message.my-message .sender-name {
+            color: #ffffff;
+        }
+        .message .sender-name {
+            font-weight: bold;
+            color: var(--red);
+            font-size: 12px;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .reply-quote {
+            background: rgba(0, 0, 0, 0.35);
+            border-right: 3px solid var(--aqua);
+            padding: 6px 10px;
+            margin-bottom: 7px;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #bbb;
+        }
+        .reply-quote strong { color: var(--aqua); }
+
+        .edited-tag {
+            font-size: 9px;
+            color: var(--muted);
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        .message.my-message .edited-tag { color: #ffd; }
+
+        .msg-text img.chat-gif {
+            max-width: 200px;
+            border-radius: 6px;
+            display: block;
+            margin-top: 5px;
+        }
+
+        /* 🖱 منوی راست کلیک / لمس طولانی سفارشی */
+        #custom-context-menu {
+            position: fixed;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            display: none;
+            z-index: 1000;
+            min-width: 150px;
+            overflow: hidden;
+            animation: pop-in 0.15s ease;
+        }
+        .ctx-item {
+            padding: 11px 16px;
+            font-size: 13px;
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.15s;
+        }
+        .ctx-item:hover {
+            background: rgba(0, 255, 204, 0.12);
+            color: var(--aqua);
+        }
+        .ctx-item.danger:hover {
+            background: rgba(255, 71, 87, 0.2);
+            color: var(--red);
+        }
+
+        /* 📌 پیش‌نمایش ریپلای */
+        #reply-preview {
+            display: none;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-right: 4px solid var(--aqua);
+            border-radius: 8px;
+            padding: 10px 16px;
+            margin: 0 24px;
+            font-size: 12px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            animation: pop-in 0.2s ease;
+        }
+        #reply-preview .reply-label { color: var(--aqua); font-weight: bold; }
+        #reply-preview .reply-text {
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 55%;
+        }
+        #cancel-reply {
+            background: none;
+            border: none;
+            color: var(--red);
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        /* 🎨 پنل ایموجی و گیف */
+        #picker-panel {
+            display: none;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            position: absolute;
+            bottom: 75px;
+            right: 24px;
+            width: 320px;
+            box-shadow: var(--shadow);
+            z-index: 50;
+            overflow: hidden;
+            animation: pop-in 0.2s ease;
+        }
+        .picker-tabs {
+            display: flex;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+        .picker-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            cursor: pointer;
+            color: var(--muted);
+            background: transparent;
+            border: none;
+            font-weight: bold;
+        }
+        .picker-tab.active {
+            color: var(--aqua);
+            border-bottom: 2px solid var(--aqua);
+            background: rgba(0,255,204,0.05);
+        }
+        .picker-content {
+            padding: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            text-align: center;
+        }
+        .emoji-item {
+            font-size: 20px;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            transition: background 0.1s;
+        }
+        .emoji-item:hover { background: rgba(255,255,255,0.08); }
+
+        .gif-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        .gif-item {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            transition: transform 0.15s;
+        }
+        .gif-item:hover { transform: scale(1.03); border-color: var(--aqua); }
+
+        /* 🖱 فرم ارسال */
+        #form {
+            background: rgba(15, 15, 15, 0.94);
+            backdrop-filter: blur(8px);
+            border-top: 1px solid var(--border);
+            padding: 15px 24px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            position: relative;
+        }
+        .emoji-toggle-btn {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--aqua);
+            font-size: 18px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .emoji-toggle-btn:hover { background: rgba(0,255,204,0.1); }
+        #input {
+            flex: 1;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 12px 16px;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        #input:focus {
+            border-color: var(--red);
+            box-shadow: 0 0 10px var(--red-glow);
+        }
+        #send-btn {
+            background: var(--red);
+            border: none;
+            color: #fff;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.22s;
+            box-shadow: 0 0 12px var(--red-glow);
+        }
+        #send-btn:hover { background: #ff6b81; transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+
+    <div id="stars-layer"></div>
+
+    <!-- 📌 منوی کلیک راست / لمس طولانی -->
+    <div id="custom-context-menu">
+        <div class="ctx-item" onclick="ctxActionReply()">↩️ ریپلای</div>
+        <div class="ctx-item" id="ctx-edit-btn" onclick="ctxActionEdit()">✏️ ویرایش</div>
+        <div class="ctx-item danger" id="ctx-delete-btn" onclick="ctxActionDelete()">🗑️ حذف پیام</div>
+    </div>
+
+    <div class="content-layer">
+        <header class="topbar">
+            <h1 class="title">💀 DEATH — Secure Messenger</h1>
+            <div class="user-inline">
+                <div class="user-badge">
+                    <span>👤 <%= user.username %></span>
+                    <span class="role-tag"><%= user.role %></span>
+                </div>
+                <a href="/logout" class="logout-btn">خروج ⏻</a>
+            </div>
+        </header>
+
+        <div class="chat-wrapper">
+            <div id="chat-box">
+                <% messages.forEach((msg) => { %>
+                    <% 
+                       const safeId = String(msg._id);
+                       const safeSender = String(msg.sender).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+                       const safeText   = String(msg.message).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+                       const hasReply = msg.replyTo && msg.replyTo.message;
+                       const safeReplySender = hasReply ? String(msg.replyTo.sender).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : '';
+                       const safeReplyText   = hasReply ? String(msg.replyTo.message).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : '';
+                       const isMine = (String(msg.sender) === String(user.username));
+                    %>
+                    <div class="message <%= isMine ? 'my-message' : '' %>" 
+                         id="msg-<%= safeId %>" 
+                         data-id="<%= safeId %>" 
+                         data-sender="<%= safeSender %>" 
+                         data-message="<%= safeText %>"
+                         data-is-mine="<%= isMine %>">
+
+                        <% if (hasReply) { %>
+                            <div class="reply-quote">
+                                <strong><%= safeReplySender %>:</strong> <%= safeReplyText %>
+                            </div>
+                        <% } %>
+
+                        <span class="sender-name"><%= safeSender %></span>
+                        <span class="msg-text">
+                            <% if (safeText.startsWith('https://') && (safeText.endsWith('.gif') || safeText.includes('giphy') || safeText.includes('tenor'))) { %>
+                                <img src="<%= safeText %>" class="chat-gif" alt="GIF">
+                            <% } else { %>
+                                <%= safeText %>
+                            <% } %>
+                        </span>
+                        <% if (msg.isEdited) { %>
+                            <small class="edited-tag">(ویرایش‌شده)</small>
+                        <% } %>
+                    </div>
+                <% }) %>
+            </div>
+
+            <!-- پنل ایموجی و گیف -->
+            <div id="picker-panel">
+                <div class="picker-tabs">
+                    <button class="picker-tab active" onclick="switchTab('emoji')">😊 ایموجی</button>
+                    <button class="picker-tab" onclick="switchTab('gif')">🎞️ گیف‌های مرگ</button>
+                </div>
+                <div class="picker-content" id="emoji-content">
+                    <div class="emoji-grid">
+                        <span class="emoji-item" onclick="insertEmoji('😀')">😀</span>
+                        <span class="emoji-item" onclick="insertEmoji('😂')">😂</span>
+                        <span class="emoji-item" onclick="insertEmoji('🔥')">🔥</span>
+                        <span class="emoji-item" onclick="insertEmoji('💀')">💀</span>
+                        <span class="emoji-item" onclick="insertEmoji('❤️')">❤️</span>
+                        <span class="emoji-item" onclick="insertEmoji('👍')">👍</span>
+                        <span class="emoji-item" onclick="insertEmoji('😎')">😎</span>
+                        <span class="emoji-item" onclick="insertEmoji('🚀')">🚀</span>
+                        <span class="emoji-item" onclick="insertEmoji('🤖')">🤖</span>
+                        <span class="emoji-item" onclick="insertEmoji('✨')">✨</span>
+                        <span class="emoji-item" onclick="insertEmoji('💯')">💯</span>
+                        <span class="emoji-item" onclick="insertEmoji('☕')">☕</span>
+                    </div>
+                </div>
+                <div class="picker-content" id="gif-content" style="display: none;">
+                    <div class="gif-grid">
+                        <img src="https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif" class="gif-item" onclick="insertGif('https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif')">
+                        <img src="https://media.giphy.com/media/xTiTnHXbRoaZ1B1Mo8/giphy.gif" class="gif-item" onclick="insertGif('https://media.giphy.com/media/xTiTnHXbRoaZ1B1Mo8/giphy.gif')">
+                        <img src="https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif" class="gif-item" onclick="insertGif('https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif')">
+                        <img src="https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif" class="gif-item" onclick="insertGif('https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif')">
+                    </div>
+                </div>
+            </div>
+
+            <div id="reply-preview">
+                <div class="reply-label">↩️ پاسخ به</div>
+                <span id="reply-to-user" class="reply-from"></span>
+                <span id="reply-to-text" class="reply-text"></span>
+                <button id="cancel-reply" onclick="cancelReply()">✕</button>
+            </div>
+
+            <form id="form" autocomplete="off">
+                <button type="button" class="emoji-toggle-btn" onclick="togglePicker()">😊</button>
+                <input id="input" type="text" placeholder="پیام خود را به دنیای تاریک بفرستید…" required>
+                <button id="send-btn" type="submit">ارسال 🚀</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const currentUsername = "<%= user.username %>";
+        const chatBox = document.getElementById('chat-box');
+        const input   = document.getElementById('input');
+        const form    = document.getElementById('form');
+        const replyPreview = document.getElementById('reply-preview');
+        const replyToUser  = document.getElementById('reply-to-user');
+        const replyToText  = document.getElementById('reply-to-text');
+        const contextMenu  = document.getElementById('custom-context-menu');
+        const pickerPanel  = document.getElementById('picker-panel');
+
+        let replyingTo = null;
+        let editingMessageId = null;
+        let activeMessageEl = null;
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // منوی Context (کلیک راست یا لمس طولانی روی موبایل)
+        chatBox.addEventListener('contextmenu', (e) => {
+            const msgEl = e.target.closest('.message');
+            if (!msgEl) return;
+            e.preventDefault();
+            openContextMenu(e.clientX, e.clientY, msgEl);
+        });
+
+        let pressTimer = null;
+        chatBox.addEventListener('touchstart', (e) => {
+            const msgEl = e.target.closest('.message');
+            if (!msgEl) return;
+            pressTimer = setTimeout(() => {
+                const touch = e.touches[0];
+                openContextMenu(touch.clientX, touch.clientY, msgEl);
+            }, 600);
+        });
+        chatBox.addEventListener('touchmove', () => clearTimeout(pressTimer));
+        chatBox.addEventListener('touchend', () => clearTimeout(pressTimer));
+
+        function openContextMenu(x, y, msgEl) {
+            activeMessageEl = msgEl;
+            const isMine = msgEl.dataset.isMine === 'true';
+
+            document.getElementById('ctx-edit-btn').style.display = isMine ? 'flex' : 'none';
+            document.getElementById('ctx-delete-btn').style.display = isMine ? 'flex' : 'none';
+
+            contextMenu.style.display = 'block';
+            contextMenu.style.left = Math.min(x, window.innerWidth - 170) + 'px';
+            contextMenu.style.top = Math.min(y, window.innerHeight - 150) + 'px';
+        }
+
+        document.addEventListener('click', () => {
+            contextMenu.style.display = 'none';
+        });
+
+        function ctxActionReply() {
+            if (!activeMessageEl) return;
+            setReply(activeMessageEl.dataset.id, activeMessageEl.dataset.sender, activeMessageEl.dataset.message);
+        }
+
+        function ctxActionEdit() {
+            if (!activeMessageEl) return;
+            setEdit(activeMessageEl.dataset.id, activeMessageEl.dataset.message);
+        }
+
+        function ctxActionDelete() {
+            if (!activeMessageEl) return;
+            if (confirm('آیا از حذف این پیام مطمئن هستید؟')) {
+                socket.emit('delete message', activeMessageEl.dataset.id);
+            }
+        }
+
+        // پنل ایموجی و گیف
+        function togglePicker() {
+            pickerPanel.style.display = pickerPanel.style.display === 'block' ? 'none' : 'block';
+        }
+        function switchTab(tab) {
+            document.querySelectorAll('.picker-tab').forEach(t => t.classList.remove('active'));
+            if (tab === 'emoji') {
+                document.querySelectorAll('.picker-tab')[0].classList.add('active');
+                document.getElementById('emoji-content').style.display = 'block';
+                document.getElementById('gif-content').style.display = 'none';
+            } else {
+                document.querySelectorAll('.picker-tab')[1].classList.add('active');
+                document.getElementById('emoji-content').style.display = 'none';
+                document.getElementById('gif-content').style.display = 'block';
+            }
+        }
+        function insertEmoji(emoji) {
+            input.value += emoji;
+            input.focus();
+        }
+        function insertGif(url) {
+            socket.emit('chat message', {
+                sender: currentUsername,
+                message: url,
+                replyTo: replyingTo ? { sender: replyingTo.sender, message: replyingTo.message } : null
+            });
+            cancelReply();
+            pickerPanel.style.display = 'none';
+        }
+
+        function setReply(id, sender, text) {
+            replyingTo = { id, sender, message: text };
+            editingMessageId = null;
+            replyToUser.textContent = sender;
+            replyToText.textContent = text.length > 40 ? text.substring(0, 40) + '…' : text;
+            replyPreview.style.display = 'flex';
+            input.placeholder = 'پاسخ دادن به ' + sender + '…';
+            input.focus();
+        }
+
+        function cancelReply() {
+            replyingTo = null;
+            replyPreview.style.display = 'none';
+            input.placeholder = 'پیام خود را به دنیای تاریک بفرستید…';
+        }
+
+        function setEdit(id, text) {
+            editingMessageId = id;
+            replyingTo = null;
+            replyPreview.style.display = 'none';
+            input.value = text;
+            input.focus();
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const value = input.value.trim();
+            if (!value) return;
+
+            if (editingMessageId) {
+                socket.emit('edit message', { id: editingMessageId, newMessage: value });
+                editingMessageId = null;
+            } else {
+                socket.emit('chat message', {
+                    sender: currentUsername,
+                    message: value,
+                    replyTo: replyingTo ? { sender: replyingTo.sender, message: replyingTo.message } : null
+                });
+                cancelReply();
+            }
+            input.value = '';
+            pickerPanel.style.display = 'none';
+        });
+
+        // سوکت‌ها
+        socket.on('chat message', (msg) => {
+            appendMessage(msg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        socket.on('message edited', (msg) => {
+            const el = document.getElementById('msg-' + msg._id);
+            if (!el) return;
+            const textSpan = el.querySelector('.msg-text');
+            if (textSpan) {
+                if (msg.message.startsWith('https://') && msg.message.endsWith('.gif')) {
+                    textSpan.innerHTML = `<img src="${msg.message}" class="chat-gif" alt="GIF">`;
+                } else {
+                    textSpan.textContent = msg.message;
+                }
+            }
+            if (!el.querySelector('.edited-tag')) {
+                const tag = document.createElement('small');
+                tag.className = 'edited-tag';
+                tag.textContent = ' (ویرایش‌شده)';
+                textSpan.after(tag);
+            }
+        });
+
+        socket.on('message deleted', (msgId) => {
+            const el = document.getElementById('msg-' + msgId);
+            if (el) el.remove();
+        });
+
+        function appendMessage(msg) {
+            const div = document.createElement('div');
+            div.className = 'message' + (msg.sender === currentUsername ? ' my-message' : '');
+            div.id = 'msg-' + msg._id;
+            div.dataset.id = msg._id;
+            div.dataset.sender = msg.sender;
+            div.dataset.message = msg.message;
+            div.dataset.isMine = (msg.sender === currentUsername);
+
+            if (msg.replyTo && msg.replyTo.message) {
+                const rq = document.createElement('div');
+                rq.className = 'reply-quote';
+                const rqStrong = document.createElement('strong');
+                rqStrong.textContent = msg.replyTo.sender + ': ';
+                rq.appendChild(rqStrong);
+                rq.appendChild(document.createTextNode(msg.replyTo.message));
+                div.appendChild(rq);
+            }
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'sender-name';
+            nameSpan.textContent = msg.sender;
+            div.appendChild(nameSpan);
+
+            const textSpan = document.createElement('span');
+            textSpan.className = 'msg-text';
+            if (msg.message.startsWith('https://') && msg.message.endsWith('.gif')) {
+                const img = document.createElement('img');
+                img.src = msg.message;
+                img.className = 'chat-gif';
+                textSpan.appendChild(img);
+            } else {
+                textSpan.textContent = msg.message;
+            }
+            div.appendChild(textSpan);
+
+            if (msg.isEdited) {
+                const tag = document.createElement('small');
+                tag.className = 'edited-tag';
+                tag.textContent = ' (ویرایش‌شده)';
+                div.appendChild(tag);
+            }
+
+            chatBox.appendChild(div);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head><link rel="stylesheet" href="/style.css"></head>
+<body>
+    <div class="fog"></div>
+    <div class="panel" style="text-align:center;">
+        <h1>DEATH SERVER</h1>
+        <p>Welcome to the darkness.</p>
+        <% if (user) { %>
+            <p>سلام <%= user.username %> 👑</p>
+            <a href="/admin" style="color:#cc0000;">پنل مدیریت</a>
+            <a href="/logout" style="color:#666;"> | خروج</a>
+        <% } else { %>
+            <a href="/login" style="color:#cc0000;">ورود</a>
+        <% } %>
+    </div>
+</body>
+</html>
